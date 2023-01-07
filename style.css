@@ -1,0 +1,48 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: black;
+}
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#canvas1 {
+    border: 5px solid white;
+    max-width: 1000px;
+}
+
+.controls {
+    display: flex;
+}
+
+.controls > input {
+    width: 60%;
+}
+.controls > label {
+    width: 35%;
+    color: aliceblue;
+    font-size: 15px;
+}
+
+.txt {
+    max-width: 100%;
+}
+
+#outputtxt {
+    color: white;
+    font-size: 4px;
+    text-align: justify;
+    line-height: 4px;
+    letter-spacing: 2px;
+    max-width: 1000px;
+}
