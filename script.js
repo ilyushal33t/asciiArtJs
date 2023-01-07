@@ -2,14 +2,19 @@ const canvas = document.querySelector('#canvas1');
 const ctx = canvas.getContext('2d');
 
 const image1 = new Image();
-image1.src = based64img[1];
+image1.src = based64img[0];
 
 var generateTxtAscii = '';
+var based64 = '';
 
 const inputSlider = document.querySelector('#resolution');
 const inputLabel = document.querySelector('#resolutionLabel');
 const output = document.querySelector('#outputtxt');
 const gen = document.querySelector('#gen');
+const based64copy = document.querySelector('#based64copy');
+const bright = document.querySelector('#brightInput');
+const brightLabel = document.querySelector('#brightLabel');
+
 inputSlider.onchange = handleSlider;
 
 class Cell {
@@ -23,7 +28,7 @@ class Cell {
         ctx.fillStyle = this.color;
         // ctx.fillStyle = 'white';
         ctx.fillText(this.symbol, this.x +.4,this.y+.4);
-        ctx.fillStyle = 'rgba(30,30,30,.8)';
+        ctx.fillStyle = 'black'//'rgba(10,10,10,.8)';
         // ctx.fillText(this.symbol, this.x, this.y);
     }
 }
@@ -91,7 +96,7 @@ class AsciiEffect {
                           blue = this.#pixels.data[pos + 2];
                     const total = red + green + blue;
                     const averageColorVal = total/3;
-                    const color = `rgb(${red}, ${green}, ${blue})`;
+                    const color = `rgb(${red + +bright.value}, ${green + +bright.value}, ${blue + +bright.value})`;
                     const symbol = this.#convertToSymbol(averageColorVal )
                     s_[row].push(symbol)
                     if (total > 100) 
@@ -113,6 +118,7 @@ class AsciiEffect {
         for (let i = 0; i < this.#imageCellArray.length; i++) {
             this.#imageCellArray[i].draw(this.#ctx);
         }
+        based64 = canvas.toDataURL();
     }
 
     draw (cellSize) {
@@ -124,18 +130,55 @@ class AsciiEffect {
 var effect;
 
 function handleSlider () {
+    based64copy.innerText = 'Copy Base64';
     if (inputSlider.value == 1) {
         inputLabel.innerHTML = 'Original Image';
         ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
     } else {
         inputLabel.innerHTML = 'Resolution ' + inputSlider.value + ' px';
+        brightLabel.innerText = 'Bright: ' + bright.value;
         ctx.font = (+inputSlider.value) + 'px Kolibri'
         effect.draw(+inputSlider.value);
     }
 }
 
 function generate() {
-    output.innerHTML = output.innerHTML ? '' : generateTxtAscii;
+    let newWindow = window.open('', 'Ascii Art', 'width=' + image1.width, 'height=' + image1.height)
+
+    let ops = [
+        `<style>
+            #outputtxt {
+                color: white;
+                font-size: 4px;
+                text-align: justify;
+                line-height: 4px;
+                letter-spacing: 2px;
+                max-width: 1000px;
+            }
+            body {
+                background: black;
+            }
+        </style>
+        `,
+        `<body>
+            <pre id="outputtxt">${generateTxtAscii}</pre>
+        </body>
+        `
+    ]
+
+    newWindow.document.write(ops.join``)
+}
+
+function copyBased64 () {
+    var tempInput = document.createElement("input");
+    tempInput.style = "position: absolute; left: -1000px; top: -1000px";
+    tempInput.value = based64;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+
+    based64copy.innerText = 'Copied!';
 }
 
 image1.onload = function initialize() {
@@ -143,8 +186,13 @@ image1.onload = function initialize() {
     canvas.height = image1.height;
     effect = new AsciiEffect(ctx, image1.width, image1.height)
     inputLabel.innerText = 'Resolution ' + inputSlider.value + ' px.'
+    brightLabel.innerText = 'Bright: ' + bright.value;
     ctx.font = +inputSlider.value + 'px Kolibri'
     effect.draw(+inputSlider.value);
 
-    gen.onclick = generate
+    based64copy.onclick  = copyBased64;
+
+    bright.onchange = handleSlider;
+
+    gen.onclick = generate;
 }

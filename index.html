@@ -13,13 +13,12 @@
         <div class="controls">
             <label for="resolution" id="resolutionLabel"></label>
             <input type="range" id="resolution" name="resolution" min="1" max="20" value="5" />
-            <input type="text" id="based64out" />
+            <label for="bright" id="brightLabel"></label>
+            <input type="range" id="brightInput" name="bright" min="0" max="100" value="20" />
+            <button type="button" id="based64copy">Copy Base64</button>
         </div>
 
-        <div class="txt">
-            <button id="gen">Generate/Close</button>
-            <pre id="outputtxt"></pre>
-        </div>
+        <button id="gen">Generate Txt</button>
     </div>
 
     <script src="img.js"></script>
