@@ -1,5 +1,9 @@
 const canvas = document.querySelector('#canvas1');
 const ctx = canvas.getContext('2d');
+const socket = io();
+
+const inputURL = document.querySelector('#inputurl');
+const submUrl = document.querySelector('#submUrl');
 
 const image1 = new Image();
 image1.src = based64img[0];
@@ -18,16 +22,16 @@ const brightLabel = document.querySelector('#brightLabel');
 inputSlider.onchange = handleSlider;
 
 class Cell {
-    constructor (x,y,symbol,color) {
+    constructor(x, y, symbol, color) {
         this.x = x;
         this.y = y;
         this.symbol = symbol;
         this.color = color;
     }
-    draw (ctx) {
+    draw(ctx) {
         ctx.fillStyle = this.color;
         // ctx.fillStyle = 'white';
-        ctx.fillText(this.symbol, this.x +.4,this.y+.4);
+        ctx.fillText(this.symbol, this.x + .4, this.y + .4);
         ctx.fillStyle = 'black'//'rgba(10,10,10,.8)';
         // ctx.fillText(this.symbol, this.x, this.y);
     }
@@ -40,16 +44,16 @@ class AsciiEffect {
     #width;
     #height;
 
-    constructor (ctx, width, height) {
+    constructor(ctx, width, height) {
         this.#ctx = ctx;
         this.#width = width;
-        this.#height = height;        
+        this.#height = height;
         this.#ctx.drawImage(image1, 0, 0, this.#width, this.#height);
-        this.#pixels = this.#ctx.getImageData(0,0, this.#width, this.#height);
+        this.#pixels = this.#ctx.getImageData(0, 0, this.#width, this.#height);
         console.log(this.#pixels.data)
     }
 
-    #convertToSymbol (g) {
+    #convertToSymbol(g) {
         '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^\`\'.';
         if (g > 250) return '$';
         else if (g > 240) return '@';
@@ -79,7 +83,7 @@ class AsciiEffect {
         else return ' ';
     }
 
-    #scanImage (cellSize) {
+    #scanImage(cellSize) {
         this.#imageCellArray = [];
         let s_ = {}, row = -1;
         for (let y = 0; y < this.#pixels.height; y += cellSize) {
@@ -92,14 +96,14 @@ class AsciiEffect {
 
                 if (this.#pixels.data[pos + 3] > 128) {
                     const red = this.#pixels.data[pos],
-                          green = this.#pixels.data[pos + 1],
-                          blue = this.#pixels.data[pos + 2];
+                        green = this.#pixels.data[pos + 1],
+                        blue = this.#pixels.data[pos + 2];
                     const total = red + green + blue;
-                    const averageColorVal = total/3;
+                    const averageColorVal = total / 3;
                     const color = `rgb(${red + +bright.value}, ${green + +bright.value}, ${blue + +bright.value})`;
-                    const symbol = this.#convertToSymbol(averageColorVal )
+                    const symbol = this.#convertToSymbol(averageColorVal)
                     s_[row].push(symbol)
-                    if (total > 100) 
+                    if (total > 100)
                         this.#imageCellArray.push(new Cell(x, y, symbol, color));
                 } else s_[row].push(' ')
             }
@@ -112,16 +116,16 @@ class AsciiEffect {
 
     }
 
-    #drawAscii () {
-        this.#ctx.clearRect (0, 0, this.#width, this.#height);
-        this.#ctx.fillRect (0, 0, this.#width, this.#height);
+    #drawAscii() {
+        this.#ctx.clearRect(0, 0, this.#width, this.#height);
+        this.#ctx.fillRect(0, 0, this.#width, this.#height);
         for (let i = 0; i < this.#imageCellArray.length; i++) {
             this.#imageCellArray[i].draw(this.#ctx);
         }
         based64 = canvas.toDataURL();
     }
 
-    draw (cellSize) {
+    draw(cellSize) {
         this.#scanImage(cellSize);
         this.#drawAscii();
     }
@@ -129,7 +133,7 @@ class AsciiEffect {
 
 var effect;
 
-function handleSlider () {
+function handleSlider() {
     based64copy.innerText = 'Copy Base64';
     if (inputSlider.value == 1) {
         inputLabel.innerHTML = 'Original Image';
@@ -137,7 +141,7 @@ function handleSlider () {
     } else {
         inputLabel.innerHTML = 'Resolution ' + inputSlider.value + ' px';
         brightLabel.innerText = 'Bright: ' + bright.value;
-        ctx.font = (+inputSlider.value) + 'px Kolibri'
+        ctx.font = (+inputSlider.value) + 'px Open Sans bold'
         effect.draw(+inputSlider.value);
     }
 }
@@ -169,17 +173,37 @@ function generate() {
     newWindow.document.write(ops.join``)
 }
 
-function copyBased64 () {
-    var tempInput = document.createElement("input");
-    tempInput.style = "position: absolute; left: -1000px; top: -1000px";
-    tempInput.value = based64;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand("copy");
-    document.body.removeChild(tempInput);
+async function post(url, body = {}, method = 'POST') {
+
+    await fetch(`/${url}`, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    }).catch(e => console.log('No server response...' + e));
+
+    return;
+}
+
+async function submitUrl() {
+    await post('based', { url: inputURL.value })
+}
+
+socket.on('loaded_based64_img', async function (data) {
+    try {
+        console.log(data)
+        if (data) image1.src = data.data;
+    } catch (e) { alert(e) }
+});
+
+async function copyBased64() {
+    await navigator.clipboard.writeText(based64)
 
     based64copy.innerText = 'Copied!';
 }
+
+submUrl.onclick = submitUrl;
 
 image1.onload = function initialize() {
     canvas.width = image1.width;
@@ -187,12 +211,13 @@ image1.onload = function initialize() {
     effect = new AsciiEffect(ctx, image1.width, image1.height)
     inputLabel.innerText = 'Resolution ' + inputSlider.value + ' px.'
     brightLabel.innerText = 'Bright: ' + bright.value;
-    ctx.font = +inputSlider.value + 'px Kolibri'
+    ctx.font = +inputSlider.value + 'px Open Sans bold'
     effect.draw(+inputSlider.value);
 
-    based64copy.onclick  = copyBased64;
+    based64copy.onclick = copyBased64;
 
     bright.onchange = handleSlider;
 
     gen.onclick = generate;
+
 }

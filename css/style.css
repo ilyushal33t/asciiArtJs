@@ -16,32 +16,29 @@ body {
     transform: translate(-50%, -50%);
 }
 
-.container > button {
-    position: absolute;
-    z-index: 2000;
-}
-
 #canvas1 {
-    border: 5px solid white;
+    min-width: 500px;
     max-width: 1000px;
-    max-width: 700px;
+    max-height: 700px;
 }
 
 .controls {
     display: flex;
+    max-height: 30px;
+    font-size: 8px;
 }
 
 .controls > input {
-    width: 60%;
+    width: 50%;
+    font-size: inherit;
 }
 .controls > label {
     width: 35%;
     color: aliceblue;
-    font-size: 15px;
+    font-size: inherit;
+    padding: 5px;
 }
-
-.txt {
-    max-width: 1000px;
-    max-height: 100%;
-    z-index: 3;
+.controls > button {
+    font-size: inherit;
+    margin: 5px;
 }
